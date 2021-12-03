@@ -1,4 +1,5 @@
 from io import BytesIO
+import os
 
 from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandler, Filters
 from telegram import Update, ParseMode
@@ -52,5 +53,6 @@ if __name__ == '__main__':
     msg_handler = MessageHandler(Filters.text & (~Filters.command), msg)
     dispatcher.add_handler(msg_handler)
 
-    updater.start_polling()
+    port = os.getenv('PORT', default=8000)
+    updater.start_webhook(port=port)
     updater.idle()
