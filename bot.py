@@ -5,7 +5,7 @@ from telegram.ext import Updater, CallbackContext, CommandHandler, MessageHandle
 from telegram import Update, ParseMode
 
 from generator import MemeGenerator, LongTextException
-from config import TOKEN
+from config import TOKEN, PORT
 
 
 generator = MemeGenerator()
@@ -44,7 +44,7 @@ def msg(update: Update, context: CallbackContext):
 
 
 if __name__ == '__main__':
-    updater = Updater(token=TOKEN, use_context=True)
+    updater = Updater(TOKEN)
     dispatcher = updater.dispatcher
 
     start_handler = CommandHandler('start', start)
@@ -53,6 +53,7 @@ if __name__ == '__main__':
     msg_handler = MessageHandler(Filters.text & (~Filters.command), msg)
     dispatcher.add_handler(msg_handler)
 
-    port = os.getenv('PORT', default=8000)
-    updater.start_webhook(port=port)
+    updater.start_webhook(
+        listen='0.0.0.0', port=PORT, url_path=TOKEN, webhook_url='https://drake-meme-bot.herokuapp.com/' + TOKEN
+    )
     updater.idle()
