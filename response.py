@@ -40,7 +40,7 @@ def parse_msg(message, chat_type):
     if chat_type == 'private':
         return message.split('\n')
     elif chat_type == 'supergroup':
-        if '#drake' in message:
+        if message.startswith('#drake'):
             return message.split(' ', 1)[-1].split('\n')
     return None
 
@@ -49,7 +49,7 @@ def msg(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
 
-    if chat_type == 'supergroup' and '#drake' not in update.message.text:
+    if chat_type == 'supergroup' and not update.message.text.startswith('#drake'):
         return
 
     if 'msg' in context.chat_data:
