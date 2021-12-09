@@ -41,7 +41,7 @@ def parse_msg(message, chat_type):
         return message.split('\n')
     elif chat_type == 'supergroup':
         if message.startswith('#drake'):
-            return message.split(' ', 1)[-1].split('\n')
+            return message[6:].strip().split('\n')
     return None
 
 
