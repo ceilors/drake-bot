@@ -27,7 +27,7 @@ class MemeGenerator:
 
         self.logo = Image.open(resource / 'logo-small.png')
         self.logo_bg = (0x0d, 0x3c, 0xa7)
-        self.logo_text = 'drakeposting meme made by drake_meme_bot @ https://github.com/ceilors/drake-bot'
+        self.logo_text = 'drakeposting meme made by @drake_meme_bot: https://github.com/ceilors/drake-bot'
 
 
     def generate(self, *, for_yes=None, for_no=None, max_width=20):
