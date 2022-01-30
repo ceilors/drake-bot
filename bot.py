@@ -17,8 +17,8 @@ if __name__ == '__main__':
     if config.USE_HEROKU:
         print('Start bot at Heroku')
         updater.start_webhook(
-            listen='0.0.0.0', port=config.PORT, url_path=config.TOKEN,
-            webhook_url=f'https://{config.APP}.herokuapp.com/{config.TOKEN}'
+            listen='0.0.0.0', port=config.PORT, url_path='',
+            webhook_url=f'https://{config.APP}.herokuapp.com/'
         )
     else:
         print('Start bot')
