@@ -1,4 +1,5 @@
 from io import BytesIO
+from random import choice
 
 from telegram import Update
 from telegram.constants import ParseMode
@@ -6,16 +7,20 @@ from telegram.constants import ParseMode
 from generator import LongTextException, MemeGenerator, Type
 
 generator = MemeGenerator()
-greetings = (
-    "<b>Привет!</b>\n\n"
-    "Я бот генерирующий <i>drake meme</i> по твоим фразам.\n\n"
-    "Поддерживаю следующие форматы сообщений:\n"
-    ' — Две строки без префиксов для генерации картинки "Нет" и "Да"\n'
-    " — Любое количество строк, но с каждая строка начинается с одного из префиксов да|yes|нет|no|+|-\n\n"
-    "Немного подожди и я пришлю тебе готовую картинку!\n\n"
-    "Также бот поддерживает работу с группами и супергруппами, но его нужно сделать админом и указывать тег #drake в начале сообщения!\n\n\n"
-    "<i>И не забывай что переносы строк разделяют фразы на пару картинок!</i>\n\n"
-)
+greetings = """<b>Привет!</b>
+
+Я бот генерирующий <i>drake meme</i> по твоим фразам.
+
+Поддерживаю следующие форматы сообщений:
+— Две строки в одном сообщении для генерации картинки "Нет" и "Да"
+— Любое количество строк, где каждая начинается с <b>да</b> | <b>yes</b> | <b>нет</b> | <b>no</b> | <b>+</b> | <b>-</b>
+
+Немного подожди и я пришлю тебе готовую картинку!
+
+Также меня можно использовать в группах и супергруппах, но мне нужны админские права!
+После добавления можешь обращаться за мемом с помощью тега #drake в начале сообщения.
+
+<i>И не забывай что переносы строк разделяют фразы на пару картинок!</i>"""
 
 
 async def start(update: Update, context):
@@ -66,6 +71,29 @@ def parse_line(s):
     return [Type.UNKNOWN, s]
 
 
+def rand_caption():
+    return choice(
+        [
+            "Hello there",
+            "Nice meme, Bro!",
+            "I see this one",
+            "That's Racist",
+            "I like it!",
+            "You Shall Not Pass!",
+            "You Shall Not Will!",
+            "Drake, Meme Drake",
+            "Say hello to my little friend",
+            "Here’s Johnny!",
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "🦆🦆🦆 / 🦆🦆🦆🦆🦆",
+            "( ╯°□°)╯ ┻━━┻",
+            "😂",
+            "🌚",
+            "42",
+        ]
+    )
+
+
 async def msg(update: Update, context):
     chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
@@ -78,7 +106,7 @@ async def msg(update: Update, context):
         photo = BytesIO()
         img.save(photo, format="png")
         photo.seek(0)
-        await update.effective_chat.send_photo(photo)
+        await update.effective_chat.send_photo(photo, caption=rand_caption())
     except Exception as e:
-        await update.effective_chat.send_message(f"<b>Бип-бип:</b> {e}", parse_mode=ParseMode.HTML)
+        await update.effective_chat.send_message(f"<b>Бип-буп:</b> {e}", parse_mode=ParseMode.HTML)
         print(e)

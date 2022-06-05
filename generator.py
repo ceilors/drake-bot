@@ -35,7 +35,7 @@ class MemeGenerator:
 
         self.logo = Image.open(resource / "logo-small.png")
         self.logo_bg = (0x0D, 0x3C, 0xA7)
-        self.logo_text = "drakeposting meme made by @drake_meme_bot: https://github.com/ceilors/drake-bot"
+        self.logo_text = "@drake_meme_bot — https://github.com/ceilors/drake-bot"
 
     def generate(self, *, message=None, max_width=20):
         # бордер по ширине для шрифта
