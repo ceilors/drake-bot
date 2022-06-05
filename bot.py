@@ -4,7 +4,7 @@ from telegram.ext import (
     CallbackContext,
     CommandHandler,
     MessageHandler,
-    Filters,
+    filters,
 )
 
 import response
@@ -17,7 +17,7 @@ if __name__ == "__main__":
     start_handler = CommandHandler("start", response.start)
     application.add_handler(start_handler)
 
-    msg_handler = MessageHandler(Filters.text & (~Filters.command), response.msg)
+    msg_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), response.msg)
     application.add_handler(msg_handler)
 
     if config.USE_HEROKU:

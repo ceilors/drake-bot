@@ -1,6 +1,7 @@
 from PIL import Image, ImageFont, ImageDraw
 from pathlib import Path
 import textwrap
+import enum
 
 
 class Type(enum.Enum):

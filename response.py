@@ -1,6 +1,5 @@
 from io import BytesIO
 
-from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
 from telegram import Update
 
@@ -18,30 +17,8 @@ greetings = (
 )
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context):
     await update.effective_chat.send_message(greetings, parse_mode=ParseMode.HTML)
-
-
-def generate_response(context, chat_id, text_yes, text_no):
-    try:
-        img = generator.generate(for_yes=text_yes, for_no=text_no)
-        photo = BytesIO()
-        img.save(photo, format="png")
-        photo.seek(0)
-        context.bot.send_photo(chat_id, photo=photo)
-    except LongTextException:
-        context.bot.send_message(
-            chat_id=chat_id,
-            text="<b>Бип-бип:</b> Текст слишком длинный!",
-            parse_mode=ParseMode.HTML,
-        )
-    except Exception as e:
-        context.bot.send_message(
-            chat_id=chat_id,
-            text="<b>Бип-буп:</b> Что-то пошло не так!",
-            parse_mode=ParseMode.HTML,
-        )
-        print(e)
 
 
 class ParseError(Exception):
@@ -81,15 +58,16 @@ def parse_line(s):
     yes = ["yes", "да", "+"]
     no = ["no", "нет", "-"]
 
-    start, rest = s.split(maxsplit=1)
-    if start in yes:
+    head, *tail = s.split(maxsplit=1)
+    rest = tail[0] if tail else ""
+    if head in yes:
         return [Type.YES, rest]
-    if start in no:
+    if head in no:
         return [Type.NO, rest]
     return [Type.UNKNOWN, s]
 
 
-async def msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def msg(update: Update, context):
     chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
 
@@ -97,7 +75,7 @@ async def msg(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message = parse_msg(update.message.text, chat_type)
         if not message:
             return
-        img = generator.generate(message)
+        img = generator.generate(message=message)
         photo = BytesIO()
         img.save(photo, format="png")
         photo.seek(0)
