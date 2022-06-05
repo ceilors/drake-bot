@@ -7,9 +7,8 @@ from telegram.ext import (
     filters,
 )
 
-import response
 import config
-
+import response
 
 if __name__ == "__main__":
     application = ApplicationBuilder().token(config.TOKEN).build()

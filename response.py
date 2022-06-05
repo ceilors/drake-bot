@@ -1,10 +1,9 @@
 from io import BytesIO
 
-from telegram.constants import ParseMode
 from telegram import Update
+from telegram.constants import ParseMode
 
-from generator import MemeGenerator, LongTextException, Type
-
+from generator import LongTextException, MemeGenerator, Type
 
 generator = MemeGenerator()
 greetings = (
