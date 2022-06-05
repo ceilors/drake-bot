@@ -12,10 +12,10 @@ greetings = (
     "Я бот генерирующий <i>drake meme</i> по твоим фразам.\n\n"
     "Поддерживаю следующие форматы сообщений:\n"
     ' — Две строки без префиксов для генерации картинки "Нет" и "Да"\n'
-    " — Любое количество строк, но с каждая строка начинается с одного из префиксов да|yes|нет|no|+|-\n"
+    " — Любое количество строк, но с каждая строка начинается с одного из префиксов да|yes|нет|no|+|-\n\n"
     "Немного подожди и я пришлю тебе готовую картинку!\n\n"
+    "Также бот поддерживает работу с группами и супергруппами, но его нужно сделать админом и указывать тег #drake в начале сообщения!\n\n\n"
     "<i>И не забывай что переносы строк разделяют фразы на пару картинок!</i>\n\n"
-    "Также бот поддерживает работу с группами и супергруппами, но его нужно сделать админом и указывать тег #drake в начале сообщения!"
 )
 
 
@@ -35,9 +35,7 @@ def parse_msg(message, chat_type):
         case "supergroup" | "group":
             hash_tag = "#drake"
             if message.startswith(hash_tag):
-                lines = [
-                    parse_line(l) for l in message[len(hash_tag) :].strip().split("\n")
-                ]
+                lines = [parse_line(l) for l in message[len(hash_tag) :].strip().split("\n")]
             else:
                 return []
     l = len(lines)
@@ -83,7 +81,5 @@ async def msg(update: Update, context):
         photo.seek(0)
         await update.effective_chat.send_photo(photo)
     except Exception as e:
-        await update.effective_chat.send_message(
-            f"<b>Бип-бип:</b> {e}", parse_mode=ParseMode.HTML
-        )
+        await update.effective_chat.send_message(f"<b>Бип-бип:</b> {e}", parse_mode=ParseMode.HTML)
         print(e)

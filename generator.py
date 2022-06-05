@@ -87,9 +87,7 @@ class MemeGenerator:
         img.paste(self.logo, box=(0, y_index))
         w, h = drw.textsize(self.logo_text, font=self.big_font)
         xy = (self.logo.size[0] + 10, y_index - 2)
-        drw.text(
-            xy=xy, text=self.logo_text, fill=self.white_color, font=self.extra_font
-        )
+        drw.text(xy=xy, text=self.logo_text, fill=self.white_color, font=self.extra_font)
 
         # добавляем текст со всякими выравниваниями
         x_index = width
