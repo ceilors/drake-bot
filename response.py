@@ -71,29 +71,6 @@ def parse_line(s):
     return [Type.UNKNOWN, s]
 
 
-def rand_caption():
-    return choice(
-        [
-            "Hello there",
-            "Nice meme, Bro!",
-            "I see this one",
-            "That's Racist",
-            "I like it!",
-            "You Shall Not Pass!",
-            "You Shall Not Will!",
-            "Drake, Meme Drake",
-            "Say hello to my little friend",
-            "Here’s Johnny!",
-            "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-            "🦆🦆🦆 / 🦆🦆🦆🦆🦆",
-            "( ╯°□°)╯ ┻━━┻",
-            "😂",
-            "🌚",
-            "42",
-        ]
-    )
-
-
 async def msg(update: Update, context):
     chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
@@ -106,7 +83,7 @@ async def msg(update: Update, context):
         photo = BytesIO()
         img.save(photo, format="png")
         photo.seek(0)
-        await update.effective_chat.send_photo(photo, caption=rand_caption())
+        await update.effective_chat.send_photo(photo)
     except Exception as e:
         await update.effective_chat.send_message(f"<b>Бип-буп:</b> {e}", parse_mode=ParseMode.HTML)
         print(e)
