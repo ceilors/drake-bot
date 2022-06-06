@@ -1,10 +1,8 @@
-from io import BytesIO
-from random import choice
-
 from telegram import Update
 from telegram.constants import ParseMode
 
-from generator import LongTextException, MemeGenerator, Type
+from generator import MemeGenerator, Type
+import error
 
 generator = MemeGenerator()
 greetings = """<b>Привет!</b>
@@ -27,10 +25,6 @@ async def start(update: Update, context):
     await update.effective_chat.send_message(greetings, parse_mode=ParseMode.HTML)
 
 
-class ParseError(Exception):
-    pass
-
-
 def parse_msg(message, chat_type):
     lines = []
     match chat_type:
@@ -44,7 +38,7 @@ def parse_msg(message, chat_type):
                 return []
     l = len(lines)
     if l < 2:
-        raise ParseError("Дрейку надо не меньше двух строк")
+        raise error.ParseError("Дрейку надо не меньше двух строк")
     if l == 2:
         fst, snd = lines
         if fst[0] == Type.UNKNOWN:
@@ -54,7 +48,7 @@ def parse_msg(message, chat_type):
     else:
         for l in lines:
             if l[0] == Type.UNKNOWN:
-                raise ParseError(f'Дрейк не определился с эмоциями для "{l[1]}"')
+                raise error.ParseError(f'Дрейк не определился с эмоциями для "{l[1]}"')
     return lines
 
 
@@ -71,19 +65,27 @@ def parse_line(s):
     return [Type.UNKNOWN, s]
 
 
+def is_link(text):
+    return text.startswith("http")
+
+
 async def msg(update: Update, context):
     chat_id = update.effective_chat.id
     chat_type = update.effective_chat.type
 
     try:
-        message = parse_msg(update.message.text, chat_type)
-        if not message:
+        messages = parse_msg(update.message.text, chat_type)
+        if not messages:
             return
-        img = generator.generate(message=message)
-        photo = BytesIO()
-        img.save(photo, format="png")
-        photo.seek(0)
-        await update.effective_chat.send_photo(photo)
+        if len(messages) > 5:
+            raise error.TooManyMessages("Максимально количество реплик: 5")
+
+        if all([is_link(text) for _, text in messages]):
+            result = generator.generate_image(messages)
+        else:
+            result = generator.generate_text(messages)
+
+        await update.effective_chat.send_photo(result)
     except Exception as e:
         await update.effective_chat.send_message(f"<b>Бип-буп:</b> {e}", parse_mode=ParseMode.HTML)
         print(e)
