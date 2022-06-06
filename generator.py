@@ -1,6 +1,14 @@
-from PIL import Image, ImageFont, ImageDraw
-from pathlib import Path
+import enum
 import textwrap
+from pathlib import Path
+
+from PIL import Image, ImageDraw, ImageFont
+
+
+class Type(enum.Enum):
+    UNKNOWN = None
+    YES = True
+    NO = False
 
 
 class LongTextException(Exception):
@@ -9,12 +17,12 @@ class LongTextException(Exception):
 
 class MemeGenerator:
     def __init__(self):
-        resource = Path('./resources/')
-        font01 = str(resource / 'Caveat-Bold.ttf')
-        font02 = str(resource / 'Spectral-Medium.ttf')
+        resource = Path("./resources/")
+        font01 = str(resource / "Caveat-Bold.ttf")
+        font02 = str(resource / "Spectral-Medium.ttf")
 
-        self.drake_yes = Image.open(resource / 'drake-yes-small.png')
-        self.drake_no = Image.open(resource / 'drake-no-small.png')
+        self.drake_yes = Image.open(resource / "drake-yes-small.png")
+        self.drake_no = Image.open(resource / "drake-no-small.png")
         self.drake_size = self.drake_yes.size
 
         self.big_font = ImageFont.truetype(font01, size=150)
@@ -25,17 +33,16 @@ class MemeGenerator:
         self.black_color = (0, 0, 0)
         self.white_color = (255, 255, 255)
 
-        self.logo = Image.open(resource / 'logo-small.png')
-        self.logo_bg = (0x0d, 0x3c, 0xa7)
-        self.logo_text = 'drakeposting meme made by @drake_meme_bot: https://github.com/ceilors/drake-bot'
+        self.logo = Image.open(resource / "logo-small.png")
+        self.logo_bg = (0x0D, 0x3C, 0xA7)
+        self.logo_text = "@drake_meme_bot — https://github.com/ceilors/drake-bot"
 
-
-    def generate(self, *, for_yes=None, for_no=None, max_width=20):
+    def generate(self, *, message=None, max_width=20):
         # бордер по ширине для шрифта
         x_border = 100
 
         # выбираем размер шрифта под размер текста
-        text_max_len = max([len(text) for text in for_no + for_yes])
+        text_max_len = max([len(text) for _, text in message])
         select_font = None
         if text_max_len <= 200:
             select_font = self.big_font
@@ -44,19 +51,19 @@ class MemeGenerator:
         elif text_max_len < 600:
             select_font = self.small_font
         else:
-            raise LongTextException()
+            raise LongTextException("Текст слишком длинный!")
 
         # расчитываем размер картинки
-        height = (len(for_yes) + len(for_no)) * self.drake_size[1] + self.logo.size[1]
+        height = (len(message)) * self.drake_size[1] + self.logo.size[1]
         width = self.drake_size[0]
         # создаём картинку и объект для рисования
-        img = Image.new(mode='RGB', size=(width, height), color=self.white_color)
+        img = Image.new(mode="RGB", size=(width, height), color=self.white_color)
         drw = ImageDraw.Draw(img)
 
         # находим самый длинный текст
         f_width, f_height = 0, 0
-        for text in for_no + for_yes:
-            text = '\n'.join(textwrap.wrap(text, width=max_width))
+        for _, text in message:
+            text = "\n".join(textwrap.wrap(text, width=max_width))
             w, h = drw.textsize(text, font=select_font)
             f_width = max(f_width, w)
             f_height = max(f_height, h)
@@ -68,15 +75,16 @@ class MemeGenerator:
 
         # добавляем Дрейков
         y_index = 0
-        for no in for_no:
-            img.paste(self.drake_no, box=(0, y_index))
-            y_index += self.drake_size[1]
-        for yes in for_yes:
-            img.paste(self.drake_yes, box=(0, y_index))
+        for t, text in message:
+            i = self.drake_no if t is Type.NO else self.drake_yes
+            img.paste(i, box=(0, y_index))
             y_index += self.drake_size[1]
 
         # добавляем лого и текста
-        drw.rectangle(xy=(0, y_index, width + f_width, y_index + self.logo.size[0]), fill=self.logo_bg)
+        drw.rectangle(
+            xy=(0, y_index, width + f_width, y_index + self.logo.size[0]),
+            fill=self.logo_bg,
+        )
         img.paste(self.logo, box=(0, y_index))
         w, h = drw.textsize(self.logo_text, font=self.big_font)
         xy = (self.logo.size[0] + 10, y_index - 2)
@@ -85,20 +93,19 @@ class MemeGenerator:
         # добавляем текст со всякими выравниваниями
         x_index = width
         y_index = (self.drake_size[1] - f_height) // 2
-        for text in for_no + for_yes:
-            text = '\n'.join(textwrap.wrap(text, width=max_width))
+        for _, text in message:
+            text = "\n".join(textwrap.wrap(text, width=max_width))
             w, h = drw.textsize(text, font=select_font)
             x_text_align = (f_width - w) // 2
             y_text_align = (f_height - h) // 2
             xy = (x_index + x_text_align, y_index + y_text_align)
-            drw.text(xy=xy, text=text, align='center', fill=self.black_color, font=select_font)
+            drw.text(
+                xy=xy,
+                text=text,
+                align="center",
+                fill=self.black_color,
+                font=select_font,
+            )
             y_index += self.drake_size[1]
 
         return img
-
-
-if __name__ == '__main__':
-    stat_no = ('Использовать готовые библиотеки для создания ПО',)
-    stat_yes = ('Писать всё самому',)
-    img = MemeGenerator().generate(for_yes=stat_yes, for_no=stat_no)
-    img.save('result.png')

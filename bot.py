@@ -1,26 +1,28 @@
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram import Update
+from telegram.ext import (
+    ApplicationBuilder,
+    CallbackContext,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
-import response
 import config
+import response
 
+if __name__ == "__main__":
+    application = ApplicationBuilder().token(config.TOKEN).build()
 
-if __name__ == '__main__':
-    updater = Updater(config.TOKEN)
-    dispatcher = updater.dispatcher
-
-    start_handler = CommandHandler('start', response.start)
-    dispatcher.add_handler(start_handler)
-
-    msg_handler = MessageHandler(Filters.text & (~Filters.command), response.msg)
-    dispatcher.add_handler(msg_handler)
+    application.add_handler(CommandHandler("start", response.start))
+    application.add_handler(CommandHandler("help", response.start))
+    application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), response.msg))
 
     if config.USE_HEROKU:
-        print('Start bot at Heroku')
-        updater.start_webhook(
-            listen='0.0.0.0', port=config.PORT, url_path='',
-            webhook_url=f'https://{config.APP}.herokuapp.com/'
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=config.PORT,
+            url_path="",
+            webhook_url=f"https://{config.APP}.herokuapp.com/",
         )
     else:
-        print('Start bot')
-        updater.start_polling()
-    updater.idle()
+        application.run_polling()
