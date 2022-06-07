@@ -34,18 +34,6 @@ def parse_msg(message, entities, chat_type):
             else:
                 return []
     l = len(lines)
-    if l < 2:
-        raise error.ParseError("Напиши мне не меньше двух строк")
-    if l == 2:
-        fst, snd = lines
-        if fst.msg_type == Type.UNKNOWN:
-            fst.msg_type = Type.NO
-        if snd.msg_type == Type.UNKNOWN:
-            snd.msg_type = Type.YES
-    else:
-        for l in lines:
-            if l.msg_type == Type.UNKNOWN:
-                raise error.ParseError(f'Не могу определится с эмоциями для "{l.message}"')
     return lines
 
 
@@ -54,17 +42,15 @@ def is_link(text):
 
 
 def parse_line(s):
-    yes = ["yes", "да", "+"]
-    no = ["no", "нет", "-"]
-
-    head, *tail = s.split(maxsplit=1)
+    head, *tail = s.split(".", maxsplit=1)
     rest = tail[0] if tail else ""
-    head = head.lower()
-    if head in yes:
-        return Item(Type.YES, is_link(rest), rest)
-    if head in no:
-        return Item(Type.NO, is_link(rest), rest)
-    return Item(Type.UNKNOWN, is_link(s), s)
+    if head.isdigit():
+        return [int(head), rest]
+    return [0, s]
+
+
+def is_link(text):
+    return text.startswith("http")
 
 
 async def msg(update: Update, context):
