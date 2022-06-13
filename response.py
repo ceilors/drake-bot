@@ -67,7 +67,7 @@ async def msg(update: Update, context):
 
     try:
         # TODO: пофиксить данный костыль
-        text = update.channel_post.text or update.message.text
+        text = update.message.text if update.message else update.channel_post.text
         messages = parse_msg(text, chat_type)
         if not messages:
             return
