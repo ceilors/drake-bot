@@ -14,7 +14,7 @@ if __name__ == "__main__":
     application = ApplicationBuilder().token(config.TOKEN).build()
 
     application.add_handler(CommandHandler("start", response.start))
-    application.add_handler(CommandHandler("help", response.start))
+    application.add_handler(CommandHandler("help", response.help))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), response.msg))
 
     if config.USE_HEROKU:

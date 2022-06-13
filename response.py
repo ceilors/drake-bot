@@ -1,28 +1,19 @@
 from telegram import Update
 from telegram.constants import ParseMode
 
-from generator import MemeGenerator, Type
+import config
 import error
+from generator import Item, MemeGenerator, Type
 
 generator = MemeGenerator()
-greetings = """<b>Привет!</b>
-
-Я бот генерирующий <i>drake meme</i> по твоим фразам.
-
-Поддерживаю следующие форматы сообщений:
-— Две строки в одном сообщении для генерации картинки "Нет" и "Да"
-— Любое количество строк, где каждая начинается с <b>да</b> | <b>yes</b> | <b>нет</b> | <b>no</b> | <b>+</b> | <b>-</b>
-
-Немного подожди и я пришлю тебе готовую картинку!
-
-Также меня можно использовать в группах и супергруппах, но мне нужны админские права!
-После добавления можешь обращаться за мемом с помощью тега #drake в начале сообщения.
-
-<i>И не забывай что переносы строк разделяют фразы на пару картинок!</i>"""
 
 
 async def start(update: Update, context):
-    await update.effective_chat.send_message(greetings, parse_mode=ParseMode.HTML)
+    await update.effective_chat.send_message(config.hello_msg + config.help_msg, parse_mode=ParseMode.HTML)
+
+
+async def help(update: Update, context):
+    await update.effective_chat.send_message(config.help_msg, parse_mode=ParseMode.HTML)
 
 
 def parse_msg(message, chat_type):
@@ -38,18 +29,22 @@ def parse_msg(message, chat_type):
                 return []
     l = len(lines)
     if l < 2:
-        raise error.ParseError("Дрейку надо не меньше двух строк")
+        raise error.ParseError("Напиши мне не меньше двух строк")
     if l == 2:
         fst, snd = lines
-        if fst[0] == Type.UNKNOWN:
-            fst[0] = Type.NO
-        if snd[0] == Type.UNKNOWN:
-            snd[0] = Type.YES
+        if fst.msg_type == Type.UNKNOWN:
+            fst.msg_type = Type.NO
+        if snd.msg_type == Type.UNKNOWN:
+            snd.msg_type = Type.YES
     else:
         for l in lines:
-            if l[0] == Type.UNKNOWN:
-                raise error.ParseError(f'Дрейк не определился с эмоциями для "{l[1]}"')
+            if l.msg_type == Type.UNKNOWN:
+                raise error.ParseError(f'Не могу определится с эмоциями для "{l.message}"')
     return lines
+
+
+def is_link(text):
+    return text.startswith("http")
 
 
 def parse_line(s):
@@ -58,15 +53,12 @@ def parse_line(s):
 
     head, *tail = s.split(maxsplit=1)
     rest = tail[0] if tail else ""
+    head = head.lower()
     if head in yes:
-        return [Type.YES, rest]
+        return Item(Type.YES, is_link(rest), rest)
     if head in no:
-        return [Type.NO, rest]
-    return [Type.UNKNOWN, s]
-
-
-def is_link(text):
-    return text.startswith("http")
+        return Item(Type.NO, is_link(rest), rest)
+    return Item(Type.UNKNOWN, is_link(s), s)
 
 
 async def msg(update: Update, context):
@@ -77,15 +69,11 @@ async def msg(update: Update, context):
         messages = parse_msg(update.message.text, chat_type)
         if not messages:
             return
-        if len(messages) > 5:
-            raise error.TooManyMessages("Максимально количество реплик: 5")
-
-        if all([is_link(text) for _, text in messages]):
-            result = generator.generate_image(messages)
-        else:
-            result = generator.generate_text(messages)
-
-        await update.effective_chat.send_photo(result)
+        if len(messages) > config.max_messages_count:
+            raise error.TooManyMessages(
+                f"Максимально количество реплик должно быть не больше {config.max_messages_count}"
+            )
+        await update.effective_chat.send_photo(generator.create(messages))
     except Exception as e:
         await update.effective_chat.send_message(f"<b>Бип-буп:</b> {e}", parse_mode=ParseMode.HTML)
         print(e)

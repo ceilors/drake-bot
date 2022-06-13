@@ -1,18 +1,26 @@
-from io import BytesIO
 import enum
 import textwrap
+from dataclasses import dataclass
+from io import BytesIO
 from pathlib import Path
 from urllib.request import urlopen
 
 from PIL import Image, ImageDraw, ImageFont
-import httpx
 
 import error
+
 
 class Type(enum.Enum):
     UNKNOWN = None
     YES = True
     NO = False
+
+
+@dataclass
+class Item:
+    msg_type: Type
+    is_link: bool
+    message: str | Image.Image
 
 
 class MemeGenerator:
@@ -26,8 +34,9 @@ class MemeGenerator:
         self.drake_size = self.drake_yes.size
 
         self.big_font = ImageFont.truetype(font01, size=150)
-        self.medium_font = ImageFont.truetype(font01, size=100)
+        self.medium_font = ImageFont.truetype(font01, size=90)
         self.small_font = ImageFont.truetype(font01, size=48)
+        self.tiny_font = ImageFont.truetype(font01, size=32)
         self.extra_font = ImageFont.truetype(font02, size=34)
 
         self.black_color = (0, 0, 0)
@@ -37,36 +46,75 @@ class MemeGenerator:
         self.logo_bg = (0x0D, 0x3C, 0xA7)
         self.logo_text = "@drake_meme_bot — https://github.com/ceilors/drake-bot"
 
-    def generate_image(self, links=None):
+    def select_font(self, items):
+        text_max_len = max([len(item.message) for item in items])
+        if text_max_len <= 120:
+            return 25, self.big_font
+        if text_max_len < 240:
+            return 30, self.medium_font
+        if text_max_len < 500:
+            return 40, self.small_font
+        raise error.LongTextException(f"Ограничение на длину текста равно {config.max_text_length} символов")
+
+    def create(self, items):
         max_height = self.drake_size[1]
+        x_border = 50
         max_width = 0
 
-        # загрузить все изображения
-        images = []
-        for _, link in links:
-            result = Image.open(urlopen(link))
-            width, height = result.size
-            if height > max_height:
-                ratio = width / height
-                width = int(ratio * max_height)
-                result = result.resize((width, max_height))
-            max_width = max(max_width, self.drake_size[0] + result.size[0])
-            images.append(result)
+        message_count = len(items)
+        magic_text_size_number, font = self.select_font(items)
 
-        # создать полотно
-        height = max_height * len(links) + self.logo.size[1]
-        img = Image.new(mode="RGB", size=(max_width, height), color=self.white_color)
+        # заглушка для тестового рендеринга
+        img = Image.new(mode="RGB", size=(0, 0))
         drw = ImageDraw.Draw(img)
 
-        # собираем воедино
-        y_index = 0
-        for (t, _), item in zip(links, images):
-            drake = self.drake_no if t is Type.NO else self.drake_yes
-            img.paste(drake, box=(0, y_index))
-            img.paste(item, box=(self.drake_size[0], y_index))
-            y_index += max_height
+        # подгружаем изображения и считаем размеры
+        for item in items:
+            if item.is_link:
+                result = Image.open(urlopen(item.message))
+                width, height = result.size
+                if height > max_height:
+                    ratio = width / height
+                    width = int(ratio * max_height)
+                    result = result.resize((width, max_height))
+                max_width = max(max_width, self.drake_size[0] + result.size[0])
+                item.message = result
+            else:
+                text = "\n".join(textwrap.wrap(item.message, width=magic_text_size_number))
+                w, _ = drw.textsize(text, font=font)
+                max_width = max(max_width, self.drake_size[0] + w + x_border * 2)
 
-        # добавляем лого и текст
+        max_height = message_count * self.drake_size[1] + self.logo.size[1]
+        right_width = max_width - self.drake_size[0]
+        # создаём картинку
+        img = Image.new(mode="RGB", size=(max_width, max_height), color=self.white_color)
+        drw = ImageDraw.Draw(img)
+
+        # рендеринг контент
+        y_index = 0
+        for item in items:
+            drake = self.drake_no if item.msg_type is Type.NO else self.drake_yes
+            img.paste(drake, box=(0, y_index))
+
+            if item.is_link:
+                x_shift = (right_width - item.message.size[0]) // 2
+                y_shift = (self.drake_size[1] - item.message.size[1]) // 2
+                img.paste(item.message, box=(x_shift + self.drake_size[0], y_shift + y_index))
+            else:
+                text = "\n".join(textwrap.wrap(item.message, width=magic_text_size_number))
+                w, h = drw.textsize(text, font=font)
+                x_text_align = self.drake_size[0] + (right_width - w) // 2
+                y_text_align = y_index + (self.drake_size[1] - h) // 2
+                drw.text(
+                    xy=(x_text_align, y_text_align),
+                    text=text,
+                    fill=self.black_color,
+                    font=font,
+                )
+
+            y_index += self.drake_size[1]
+
+        # добавляем футер
         drw.rectangle(
             xy=(0, y_index, max_width, y_index + self.logo.size[0]),
             fill=self.logo_bg,
@@ -77,83 +125,6 @@ class MemeGenerator:
         drw.text(xy=xy, text=self.logo_text, fill=self.white_color, font=self.extra_font)
 
         # и сохраняем картинку в BytesIO
-        photo = BytesIO()
-        img.save(photo, format="png")
-        photo.seek(0)
-
-        return photo
-
-    def generate_text(self, message=None, max_width=20):
-        # бордер по ширине для шрифта
-        x_border = 100
-
-        # выбираем размер шрифта под размер текста
-        text_max_len = max([len(text) for _, text in message])
-        select_font = None
-        if text_max_len <= 200:
-            select_font = self.big_font
-        elif text_max_len < 300:
-            select_font = self.medium_font
-        elif text_max_len < 600:
-            select_font = self.small_font
-        else:
-            raise error.LongTextException("Текст слишком длинный!")
-
-        # расчитываем размер картинки
-        height = (len(message)) * self.drake_size[1] + self.logo.size[1]
-        width = self.drake_size[0]
-        # создаём картинку и объект для рисования
-        img = Image.new(mode="RGB", size=(width, height), color=self.white_color)
-        drw = ImageDraw.Draw(img)
-
-        # находим самый длинный текст
-        f_width, f_height = 0, 0
-        for _, text in message:
-            text = "\n".join(textwrap.wrap(text, width=max_width))
-            w, h = drw.textsize(text, font=select_font)
-            f_width = max(f_width, w)
-            f_height = max(f_height, h)
-        f_width += 2 * x_border
-        # ресайзим картинку
-        img = img.resize((width + f_width, height))
-        # пересоздаём объект для рисования
-        drw = ImageDraw.Draw(img)
-
-        # добавляем Дрейков
-        y_index = 0
-        for t, text in message:
-            i = self.drake_no if t is Type.NO else self.drake_yes
-            img.paste(i, box=(0, y_index))
-            y_index += self.drake_size[1]
-
-        # добавляем лого и текст
-        drw.rectangle(
-            xy=(0, y_index, width + f_width, y_index + self.logo.size[0]),
-            fill=self.logo_bg,
-        )
-        img.paste(self.logo, box=(0, y_index))
-        w, h = drw.textsize(self.logo_text, font=self.big_font)
-        xy = (self.logo.size[0] + 10, y_index - 2)
-        drw.text(xy=xy, text=self.logo_text, fill=self.white_color, font=self.extra_font)
-
-        # добавляем текст со выравниванием
-        x_index = width
-        y_index = (self.drake_size[1] - f_height) // 2
-        for _, text in message:
-            text = "\n".join(textwrap.wrap(text, width=max_width))
-            w, h = drw.textsize(text, font=select_font)
-            x_text_align = (f_width - w) // 2
-            y_text_align = (f_height - h) // 2
-            xy = (x_index + x_text_align, y_index + y_text_align)
-            drw.text(
-                xy=xy,
-                text=text,
-                align="center",
-                fill=self.black_color,
-                font=select_font,
-            )
-            y_index += self.drake_size[1]
-
         photo = BytesIO()
         img.save(photo, format="png")
         photo.seek(0)
