@@ -21,7 +21,7 @@ def parse_msg(message, chat_type):
     match chat_type:
         case "private":
             lines = [parse_line(l) for l in message.split("\n")]
-        case "supergroup" | "group":
+        case "supergroup" | "group" | "channel":
             hash_tag = "#drake"
             if message.startswith(hash_tag):
                 lines = [parse_line(l) for l in message[len(hash_tag) :].strip().split("\n")]
@@ -66,7 +66,9 @@ async def msg(update: Update, context):
     chat_type = update.effective_chat.type
 
     try:
-        messages = parse_msg(update.message.text, chat_type)
+        # TODO: пофиксить данный костыль
+        text = update.channel_post.text or update.message.text
+        messages = parse_msg(text, chat_type)
         if not messages:
             return
         if len(messages) > config.max_messages_count:
