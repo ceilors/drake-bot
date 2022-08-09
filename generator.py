@@ -10,12 +10,6 @@ from PIL import Image, ImageDraw, ImageFont
 import error
 
 
-class Type(enum.Enum):
-    UNKNOWN = None
-    YES = True
-    NO = False
-
-
 @dataclass
 class Item:
     msg_type: Type
@@ -46,19 +40,11 @@ class MemeGenerator:
         self.logo_bg = (0x0D, 0x3C, 0xA7)
         self.logo_text = "@drake_meme_bot — https://github.com/ceilors/drake-bot"
 
-    def select_font(self, items):
-        text_max_len = max([len(item.message) for item in items])
-        if text_max_len <= 120:
-            return 25, self.big_font
-        if text_max_len < 240:
-            return 30, self.medium_font
-        if text_max_len < 500:
-            return 40, self.small_font
-        raise error.LongTextException(f"Ограничение на длину текста равно {config.max_text_length} символов")
-
-    def create(self, items):
-        max_height = self.drake_size[1]
-        x_border = 50
+    def generate_image(self, meme="drake", links=None):
+        meme_images = self.memes.get(meme)
+        if not meme_images:
+            raise error.NoSuchMemeException("Такого мема у меня нет")
+        max_height = self.meme_images[0].size[1]
         max_width = 0
 
         message_count = len(items)

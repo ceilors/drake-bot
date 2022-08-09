@@ -12,3 +12,7 @@ class LongTextException(Exception):
 
 class ImageLoadException(Exception):
     pass
+
+
+class NoSuchMemeException(Exception):
+    pass
