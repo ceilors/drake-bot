@@ -18,21 +18,20 @@ async def help(update: Update, context):
 
 def parse_msg(message, entities, chat_type):
     lines = []
-    match chat_type:
-        case "private":
-            lines = [parse_line(l) for l in message.split("\n")]
-        case "supergroup" | "group" | "channel":
-            if len(entities) == 0:
-                return []
-            entity = entities[0]
-            msg_hash_tag = message[entity.offset:entity.length]
-            if entity.type == MessageEntityType.HASHTAG and msg_hash_tag == "#drake":
-                message = message[entity.length:]
-                if len(message) == 0:
-                    raise error.ParseError("Где текст Билли?")
-                lines = [parse_line(l) for l in message.strip().split("\n")]
-            else:
-                return []
+    if chat_type == "private":
+        lines = [parse_line(l) for l in message.split("\n")]
+    elif chat_type in ["supergroup", "group", "channel"]:
+        if len(entities) == 0:
+            return []
+        entity = entities[0]
+        msg_hash_tag = message[entity.offset:entity.length]
+        if entity.type == MessageEntityType.HASHTAG and msg_hash_tag == "#drake":
+            message = message[entity.length:]
+            if len(message) == 0:
+                raise error.ParseError("Где текст Билли?")
+            lines = [parse_line(l) for l in message.strip().split("\n")]
+        else:
+            return []
     l = len(lines)
     if l < 2:
         raise error.ParseError("Напиши мне не меньше двух строк")
