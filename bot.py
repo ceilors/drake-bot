@@ -10,12 +10,15 @@ from telegram.ext import (
 import config
 import response
 
+
 if __name__ == "__main__":
     application = ApplicationBuilder().token(config.TOKEN).build()
 
     application.add_handler(CommandHandler("start", response.start))
     application.add_handler(CommandHandler("help", response.help))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), response.msg))
+
+    application.add_error_handler(response.error_handler)
 
     if config.USE_WEBHOOK:
         application.run_webhook(

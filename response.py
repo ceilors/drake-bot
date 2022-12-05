@@ -1,3 +1,5 @@
+import logging
+
 from telegram import Update
 from telegram.constants import ParseMode, MessageEntityType
 
@@ -7,6 +9,9 @@ from generator import Item, MemeGenerator, Type
 
 generator = MemeGenerator()
 
+logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 async def start(update: Update, context):
     await update.effective_chat.send_message(config.hello_msg + config.help_msg, parse_mode=ParseMode.HTML)
@@ -14,6 +19,10 @@ async def start(update: Update, context):
 
 async def help(update: Update, context):
     await update.effective_chat.send_message(config.help_msg, parse_mode=ParseMode.HTML)
+
+
+async def error_handler(update, context) -> None:
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
 
 
 def parse_msg(message, entities, chat_type):
