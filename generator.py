@@ -20,7 +20,7 @@ class Type(enum.Enum):
 class Item:
     msg_type: Type
     is_link: bool
-    message: str | Image.Image
+    message: str
 
 
 class MemeGenerator:
