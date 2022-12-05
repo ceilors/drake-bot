@@ -1,6 +1,6 @@
 import os
 
-USE_HEROKU = True
+USE_HEROKU = os.environ.get("USE_HEROKU")
 TOKEN = os.environ.get("TOKEN")
 PORT = int(os.environ.get("PORT", "8443"))
 APP = os.environ.get("APP_NAME")
