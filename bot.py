@@ -17,12 +17,12 @@ if __name__ == "__main__":
     application.add_handler(CommandHandler("help", response.help))
     application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), response.msg))
 
-    if config.USE_HEROKU:
+    if config.USE_WEBHOOK:
         application.run_webhook(
             listen="0.0.0.0",
             port=config.PORT,
             url_path="",
-            webhook_url=f"https://{config.APP}.herokuapp.com/",
+            webhook_url=f"https://{config.APP}.{config.SITE}/",
         )
     else:
         application.run_polling()
