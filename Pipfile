@@ -5,12 +5,12 @@ name = "pypi"
 
 [packages]
 python-telegram-bot = "==20.0a1"
-Pillow = ">=9.0"
+pillow = ">=9.2.0"
 
 [dev-packages]
 black = "*"
 isort = "*"
 
 [requires]
-python_version = "3.10"
+python_version = "3.7"
 allow_prereleases = true
