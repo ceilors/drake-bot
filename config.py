@@ -1,6 +1,6 @@
 import os
 
-USE_WEBHOOK = os.environ.get("USE_WEBHOOK")
+USE_WEBHOOK = os.environ.get("USE_WEBHOOK").lower() == "true"
 TOKEN = os.environ.get("TOKEN")
 PORT = int(os.environ.get("PORT", "8443"))
 APP = os.environ.get("APP_NAME")
