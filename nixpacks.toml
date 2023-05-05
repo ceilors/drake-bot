@@ -1,0 +1,5 @@
+[phase.name]
+onlyIncludeFiles = [
+    'resources/drake-no-small.png', 'resources/drake-yes-small.png', 'resources/logo-small.png',
+    'resources/Caveat-Bold.ttf', 'resources/Spectral-Medium.ttf'
+]
