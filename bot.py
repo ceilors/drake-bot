@@ -11,7 +11,7 @@ import config
 import response
 
 
-if __name__ == "__main__":
+def main():
     application = ApplicationBuilder().token(config.TOKEN).build()
 
     application.add_handler(CommandHandler("start", response.start))
@@ -20,12 +20,13 @@ if __name__ == "__main__":
 
     application.add_error_handler(response.error_handler)
 
-    if config.USE_WEBHOOK:
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=config.PORT,
-            url_path="",
-            webhook_url=f"https://{config.APP}.{config.SITE}/",
-        )
-    else:
-        application.run_polling()
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=config.PORT,
+        url_path="",
+        webhook_url=f"https://{config.APP}.{config.SITE}/",
+    )
+
+
+if __name__ == "__main__":
+    main()
