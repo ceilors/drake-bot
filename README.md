@@ -3,10 +3,6 @@
 
 <img src="./resources/drake-yes-small.png" alt="drawing" width="200"/>
 
-Если будете запускать своего на heroku, то:
-- установить параметр `USE_HEROKU` в `config.py`
-- пропишите в переменные окружения
-    - `TOKEN`
-    - `HEROKU_BUILDPACK_GIT_LFS_REPO`
-    - `APP_NAME` такое же имя как и у сервиса в heroku
-- установить `https://github.com/raxod502/heroku-buildpack-git-lfs`
+# Как запустить
+1. Задать `TOKEN` в переменные окружения
+2. Запустить через `python -m drake`

@@ -1,9 +1,6 @@
 import os
 
-USE_HEROKU = True
 TOKEN = os.environ.get("TOKEN")
-PORT = int(os.environ.get("PORT", "8443"))
-APP = os.environ.get("APP_NAME")
 
 max_messages_count = 5
 max_text_length = 600
