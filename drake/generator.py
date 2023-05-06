@@ -7,7 +7,7 @@ from urllib.request import urlopen
 
 from PIL import Image, ImageDraw, ImageFont
 
-import error
+from drake import config, error
 
 
 class Type(enum.Enum):
